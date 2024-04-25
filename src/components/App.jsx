@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-
+import { useEffect, useState } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
@@ -8,75 +7,68 @@ import { Modal } from './Modal/Modal';
 import { getImages } from './serviceApi/serviceApi';
 import styles from './App.module.css';
 
-export class App extends Component {
-  state = {
-    images: [],
-    loading: false,
-    page: 1,
-    modalOpen: false,
-    selectedImage: '',
-    query: '',
-    showBtn: false,
-  };
 
-  handleSearch = (query) => {
-    this.setState({ images: [], page: 1, query });
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+  const [query, setQuery] = useState('');
+  const [showBtn, setShowBtn] = useState(false);
 
-  searchImages = async () => {
-    this.setState({ loading: true });
+  useEffect(() => {
+    if (!query) return;
+    const searchImages = async () => {
+      setLoading(true);
 
-    try {
-      const response = await getImages(this.state.query, this.state.page);
-
-      this.setState((prevState) => ({
-        images: [...prevState.images, ...response.hits],
-        showBtn: this.state.page < Math.ceil(response.totalHits / 12),
-      }));
-    } catch (error) {
-      console.error('Error fetching images:', error);
-    } finally {
-      this.setState({ loading: false });
-    }
-  };
-
-  loadMoreImages = () => {
-    this.setState((prevState) => ({ page: prevState.page + 1 }));
-  };
-
-  openModal = (imageUrl) => {
-    this.setState({ modalOpen: true, selectedImage: imageUrl });
-  };
-
-  closeModal = () => {
-    this.setState({ modalOpen: false, selectedImage: '' });
-  };
-
-
-  componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) {
       try {
-        this.setState({ loading: true });
-        this.searchImages()
+        const response = await getImages(query, page);
+        setImages(prevImages => [...prevImages, ...response.hits]);
+        setShowBtn(page < Math.ceil(response.totalHits / 12));
       } catch (error) {
-
+        console.error('Error fetching images:', error);
+      } finally {
+        setLoading(false);
       }
-  
-    }
-  }
+    };
 
-    render() {
-      const { images, loading, modalOpen, selectedImage, showBtn } = this.state;
+    searchImages();
+  }, [query, page]);
 
-      return (
-        <div className={styles.App}>
-          <Searchbar onSubmit={this.handleSearch} />
-          <ImageGallery images={images} openModal={this.openModal} />
-          {loading && <Loader />}
-          {showBtn && <Button onLoadMore={this.loadMoreImages} hasMore={!loading} />}
-          <Modal isOpen={modalOpen} closeModal={this.closeModal} imageUrl={selectedImage} onOverlayClick={this.handleOverlayClick} />
-        </div>
-      )
-   }
- }
+  const handleSearch = newQuery => {
+    setImages([]);
+    setPage(1);
+    setQuery(newQuery);
+  };
+
+  const loadMoreImages = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const openModal = imageUrl => {
+    setModalOpen(true);
+    setSelectedImage(imageUrl);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedImage('');
+    document.body.style.overflow = '';
+  };
+
+  const handleOverlayClick = () => {
+    closeModal();
+  };
+
+  return (
+    <div className={styles.App}>
+      <Searchbar onSubmit={handleSearch} />
+      <ImageGallery images={images} openModal={openModal} />
+      {loading && <Loader />}
+      {showBtn && <Button onLoadMore={loadMoreImages} hasMore={!loading} />}
+      <Modal isOpen={modalOpen} closeModal={closeModal} imageUrl={selectedImage} onOverlayClick={handleOverlayClick} />
+    </div>
+  );
+};
