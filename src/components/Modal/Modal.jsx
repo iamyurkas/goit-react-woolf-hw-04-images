@@ -2,6 +2,18 @@ import styles from './Modal.module.css';
 import { useEffect } from 'react';
 
 export const Modal = ({ closeModal, isOpen, imageUrl }) => {
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = ''; 
+    };
+  }, [isOpen]); 
+
   const handleOverlayClick = e => {
     if (e.target === e.currentTarget) {
       closeModal();
@@ -14,6 +26,7 @@ export const Modal = ({ closeModal, isOpen, imageUrl }) => {
         closeModal();
       }
     };
+    
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [closeModal]);

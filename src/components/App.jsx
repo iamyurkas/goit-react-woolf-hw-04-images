@@ -49,13 +49,11 @@ export const App = () => {
   const openModal = imageUrl => {
     setModalOpen(true);
     setSelectedImage(imageUrl);
-    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setModalOpen(false);
     setSelectedImage('');
-    document.body.style.overflow = '';
   };
 
   const handleOverlayClick = () => {
