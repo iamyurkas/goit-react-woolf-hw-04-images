@@ -1,44 +1,31 @@
-import PropTypes from 'prop-types';
 import styles from './Modal.module.css';
-import { Component } from 'react';
+import { useEffect } from 'react';
 
-export class Modal extends Component {
-  handleOverlayClick = (e) => {
+export const Modal = ({ closeModal, isOpen, imageUrl }) => {
+  const handleOverlayClick = e => {
     if (e.target === e.currentTarget) {
-      this.props.closeModal();
+      closeModal();
     }
   };
 
-  handleKeyUp = (e) => {
-    if (e.key === 'Escape') {
-      this.props.closeModal();
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closeModal]);
 
-  componentDidMount() {
-    window.addEventListener('keyup', this.handleKeyUp);
-    document.body.style.overflow = 'hidden';
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('keyup', this.handleKeyUp);
-    document.body.style.overflow = '';
-  }
-
-  render() {
-    const { isOpen, imageUrl } = this.props;
-    return (
-    <div className={isOpen ? styles.Overlay : styles.Hidden} onClick={this.handleOverlayClick}>
+  return (
+    <div
+      className={isOpen ? styles.Overlay : styles.Hidden}
+      onClick={handleOverlayClick}
+    >
       <div className={styles.Modal}>
         <img src={imageUrl} alt="Large" />
       </div>
-      </div>
-      )
-  }
-}
-
-Modal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  closeModal: PropTypes.func.isRequired,
-  imageUrl: PropTypes.string.isRequired,
+    </div>
+  );
 };
